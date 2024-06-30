@@ -1,0 +1,29 @@
+# 编译生成的二进制文件
+/gfdown
+
+# 编辑器和IDE生成的文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+
+# 临时文件和目录
+*.log
+*.out
+*.tmp
+*.bak
+
+# Go 包缓存目录
+/pkg/
+
+# Vendor 文件夹（如果你使用 go mod vendor 命令）
+vendor/
+
+# 覆盖率报告
+*.coverprofile
+*.test
+
+# GoLand IDE 文件
+/.idea/
+/*.iml
