@@ -13,4 +13,9 @@ Each option can be ignored, it will take the default value
 go build -o gfdown ./cmd/gfdown  
 ```
 
-## just for test
+## for release
+```
+git tag v2.0.0
+git push origin v2.0.0
+```
+keep the version of .github/workflows/release.yml the same
