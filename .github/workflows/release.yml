@@ -3,15 +3,27 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v1.0.0' # 当推送符合vX.X.X模式的标签时触发
+      - 'v1.0.1' # 当推送符合 vX.X.X 模式的标签时触发
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            ext: ""
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            ext: ""
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            ext: ".exe"
 
     steps:
       - name: Checkout code
@@ -24,23 +36,17 @@ jobs:
 
       - name: Build
         run: |
-          GOOS=${{ matrix.os == 'ubuntu-latest' && echo 'linux' || ( matrix.os == 'macos-latest' && echo 'darwin' || echo 'windows' ) }}
-          GOARCH=amd64
-          EXT=${{ matrix.os == 'windows-latest' && echo '.exe' || echo '' }}
-          go build -o gfdown-$GOOS-$GOARCH$EXT ./cmd/gfdown
+          go build -o gfdown-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} ./cmd/gfdown
 
       - name: Archive build artifacts
         run: |
           mkdir -p dist
-          GOOS=${{ matrix.os == 'ubuntu-latest' && echo 'linux' || ( matrix.os == 'macos-latest' && echo 'darwin' || echo 'windows' ) }}
-          GOARCH=amd64
-          EXT=${{ matrix.os == 'windows-latest' && echo '.exe' || echo '' }}
-          mv gfdown-$GOOS-$GOARCH$EXT dist/
+          mv gfdown-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} dist/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: gfdown-${{ matrix.os }}
+          name: gfdown-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/
 
   release:
@@ -48,20 +54,22 @@ jobs:
     needs: build
 
     steps:
-      - name: Download build artifacts
+      - name: Download build artifacts (Linux)
         uses: actions/download-artifact@v2
         with:
-          name: gfdown-ubuntu-latest
+          name: gfdown-linux-amd64
           path: dist/
-      - name: Download build artifacts
+
+      - name: Download build artifacts (MacOS)
         uses: actions/download-artifact@v2
         with:
-          name: gfdown-macos-latest
+          name: gfdown-darwin-amd64
           path: dist/
-      - name: Download build artifacts
+
+      - name: Download build artifacts (Windows)
         uses: actions/download-artifact@v2
         with:
-          name: gfdown-windows-latest
+          name: gfdown-windows-amd64
           path: dist/
 
       - name: Create Release
@@ -75,12 +83,32 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
+      - name: Upload Release Asset (Linux)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/
-          asset_name: gfdown-${{ github.ref_name }}.zip
-          asset_content_type: application/zip
+          asset_path: dist/gfdown-linux-amd64
+          asset_name: gfdown-linux-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset (MacOS)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/gfdown-darwin-amd64
+          asset_name: gfdown-darwin-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset (Windows)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/gfdown-windows-amd64.exe
+          asset_name: gfdown-windows-amd64.exe
+          asset_content_type: application/octet-stream
