@@ -1,5 +1,6 @@
 # gfdown
-
+This project can help set Macbook as file web service,  
+so that you can download file from macbook in android phone,.
 
 ## As a developer  
 you can start up project in this way:  
